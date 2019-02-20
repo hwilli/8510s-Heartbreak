@@ -44,10 +44,6 @@ Updated by Eugene Yedvabny on 2/19/2019
 from __future__ import division
 import sys, time, serial
 from string import join
-try:
-    from   win32com.server.exception import COMException
-except:
-    pass
 
 # Debugging information is set to stdout by default.  You can change
 # the out variable to another method to e.g. write to a different
@@ -610,16 +606,3 @@ class DCLoad(InstrumentInterface):
         fw += hex(ord(response[8]))[2:]
         serial_number = response[10:20]
         return join((str(model), str(serial_number), str(fw)), "\t")
-
-def Register(pyclass=DCLoad):
-    from win32com.server.register import UseCommandLine
-    UseCommandLine(pyclass)
-def Unregister(classid=DCLoad._reg_clsid_):
-    from win32com.server.register import UnregisterServer
-    UnregisterServer(classid)
-
-# Run this script to register the COM server.  Use the command line
-# argument --unregister to unregister the server.
-
-if __name__ == '__main__':
-    Register()
