@@ -35,7 +35,9 @@ def runBatteryTest(load):
     print "Mode is = ", load.GetMode()
     print "Resistance is = ", load.GetCRResistance()
 
-    with open('battery_test.csv', 'wb') as csvfile:
+    teststarttime = time.strftime("%Y-%m-%d_%H-%M-%S")
+	filename = 'battery_test_' + teststarttime + '.csv'
+    with open(filename, 'wb') as csvfile:
         csv_w = csv.writer(csvfile, delimiter=',')
         headers = ['time','voltage','current','power']
         writeData(headers, csv_w)
