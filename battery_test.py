@@ -22,21 +22,21 @@ def stopTest(signal, frame):
     print "Stopping the test prematurely"
     testIsRunning = False
 
-def runBatteryTest(load):
+def runBatteryTest(load, resistance):
     global testIsRunning
 
     print "Starting a constant-resistance test"
     updateSettings("Set to remote control", load.SetRemoteControl())
 
     # Configure test settings
-    updateSetting("Set to constant resistance mode", load.SetMode('cr'))
-    updateSetting("Set CR resistance", load.SetCRResistance(10)) # Specify resistance in Ohms
+    updateSettings("Set to constant resistance mode", load.SetMode('cr'))
+    updateSettings("Set CR resistance", load.SetCRResistance(resistance))
     print "Function is = ", load.GetFunction()
     print "Mode is = ", load.GetMode()
     print "Resistance is = ", load.GetCRResistance()
 
     teststarttime = time.strftime("%Y-%m-%d_%H-%M-%S")
-	filename = 'battery_test_' + teststarttime + '.csv'
+    filename = 'battery_test_' + teststarttime + '.csv'
     with open(filename, 'wb') as csvfile:
         csv_w = csv.writer(csvfile, delimiter=',')
         headers = ['time','voltage','current','power']
@@ -51,16 +51,16 @@ def runBatteryTest(load):
         time.sleep(1)
 
         while testIsRunning:
-            data = parseInputValues(load)
+            data = load.GetInputValues()
             writeData(formatDataRow(data), csv_w)
 
             # stop if the read voltage drops below 3 volts, or amps below 100 mA
             if data['current'] < 0.1:
                 break
 
-            #sleep for 10 seconds before sampling again
+            #sleep for a second before sampling again
             try:
-                time.sleep(10)
+                time.sleep(1)
             except IOError:
                 pass
 
@@ -75,6 +75,8 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, stopTest)
     signal.signal(signal.SIGTERM, stopTest)
 
+    resistance = float(sys.argv[1])
+
     load = dcload.DCLoad()
     load.Initialize('COM2', 9600)
-    runBatteryTest(load)
+    runBatteryTest(load, resistance)
