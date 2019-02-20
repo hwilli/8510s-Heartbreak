@@ -30,13 +30,15 @@ through the DCLoad object.  This object can also be used as a COM
 server by running this module as a script to register it.  All the
 DCLoad object methods return strings.  All units into and out of the
 DCLoad object's methods are in SI units.
- 
+
 See the documentation file that came with this script.
 
-$RCSfile: dcload.py $ 
+$RCSfile: dcload.py $
 $Revision: 1.0 $
 $Date: 2008/05/17 15:57:15 $
 $Author:  Don Peterson $
+
+Updated by Eugene Yedvabny on 2/19/2019
 '''
 
 from __future__ import division
@@ -52,7 +54,7 @@ except:
 # stream.
 out = sys.stdout.write
 nl = "\n"
- 
+
 class InstrumentException(Exception): pass
 
 class InstrumentInterface:
@@ -184,7 +186,7 @@ class InstrumentInterface:
                 assert(len(s) == 4)
         return s
     def DecodeInteger(self, str):
-        '''Construct an integer from the little endian string. 1, 2, and 4 byte 
+        '''Construct an integer from the little endian string. 1, 2, and 4 byte
         strings are the only ones allowed.
         '''
         assert(len(str) == 1 or len(str) == 2 or len(str) == 4)
@@ -197,7 +199,7 @@ class InstrumentInterface:
         return n
     def GetReserved(self, num_used):
         '''Construct a string of nul characters of such length to pad a
-        command to one less than the packet size (leaves room for the 
+        command to one less than the packet size (leaves room for the
         checksum byte.
         '''
         num = self.length_packet - num_used - 1
@@ -213,7 +215,7 @@ class InstrumentInterface:
             out(cmd_name + " response:" + nl)
             self.DumpCommand(response)
     def GetCommand(self, command, value, num_bytes=4):
-        '''Construct the command with an integer value of 0, 1, 2, or 
+        '''Construct the command with an integer value of 0, 1, 2, or
         4 bytes.
         '''
         cmd = self.StartCommand(command)
@@ -409,7 +411,7 @@ class DCLoad(InstrumentInterface):
         msg = "Get CR resistance"
         return self.GetIntegerFromLoad(0x31, msg, num_bytes=4)/self.convert_resistance
     def SetTransient(self, mode, A, A_time_s, B, B_time_s, operation="continuous"):
-        '''Sets up the transient operation mode.  mode is one of 
+        '''Sets up the transient operation mode.  mode is one of
         "CC", "CV", "CW", or "CR".
         '''
         if mode.lower() not in self.modes:
@@ -467,7 +469,7 @@ class DCLoad(InstrumentInterface):
                     B/self.convert_power, B_timer_ms/time_const,
                     transient_operations_inv[operation]))
         else:
-            return str((A/self.convert_resistance, A_timer_ms/time_const, 
+            return str((A/self.convert_resistance, A_timer_ms/time_const,
                     B/self.convert_resistance, B_timer_ms/time_const,
                     transient_operations_inv[operation]))
     def SetBatteryTestVoltage(self, min_voltage):
@@ -605,7 +607,7 @@ class DCLoad(InstrumentInterface):
         self.PrintCommandAndResponse(cmd, response, "Get product info")
         model = response[3:8]
         fw = hex(ord(response[9]))[2:] + "."
-        fw += hex(ord(response[8]))[2:] 
+        fw += hex(ord(response[8]))[2:]
         serial_number = response[10:20]
         return join((str(model), str(serial_number), str(fw)), "\t")
 
