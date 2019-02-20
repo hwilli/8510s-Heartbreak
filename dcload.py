@@ -260,6 +260,57 @@ class InstrumentInterface:
         response = self.SendCommand(cmd)
         self.PrintCommandAndResponse(cmd, response, msg)
         return self.DecodeInteger(response[3:3 + num_bytes])
+    def ParseOperationState(self, operation):
+        '''Operation state is returned as an interger representing
+        the following binary values:
+            bit 0: Calculate the new demarcation coefficient
+            bit 1: Waiting for a trigger signal
+            bit 2: Remote control state (1 means enabled)
+            bit 3: Output state (1 means ON)
+            bit 4: Local key state (0 means not enabled, 1 means enabled)
+            bit 5: Remote sensing mode (1 means enabled)
+            bit 6: LOAD ON timer is enabled
+            bit 7: Reserved
+        Returns a dictionary containing the above seven booleans.
+        '''
+        state = {
+                'demarcation':          bool(operation & (1 << 0)),
+                'waiting_on_trigger':   bool(operation & (1 << 1)),
+                'is_remote_controlled': bool(operation & (1 << 2)),
+                'is_on':                bool(operation & (1 << 3)),
+                'local_key_state':      bool(operation & (1 << 4)),
+                'remote_sensing':       bool(operation & (1 << 5)),
+                'load_on_timer':        bool(operation & (1 << 6)),
+                }
+        return state
+    def ParseDemandState(self, demand):
+        '''Demand state is returned as an integer representing
+        the following binary values:
+            bit 0: Reversed voltage at terminals (1 means yes)
+            bit 1: Over voltage (1 means yes)
+            bit 2: Over current (1 means yes)
+            bit 3: Over power (1 means yes)
+            bit 4: Over temperature (1 means yes)
+            bit 5: Remote terminal is disconnected
+            bit 6: Constant current
+            bit 7: Constant voltage
+            bit 8: Constant power
+            bit 9: Constant resistance
+        Returns a dictionary containing the above ten booleans.
+        '''
+        state = {
+                'voltage_reversed':      bool(demand & (1 << 0)),
+                'over_voltage':          bool(demand & (1 << 1)),
+                'over_current':          bool(demand & (1 << 2)),
+                'over_power':            bool(demand & (1 << 3)),
+                'over_temperature':      bool(demand & (1 << 4)),
+                'disconnected_terminal': bool(demand & (1 << 5)),
+                'constant_current':      bool(demand & (1 << 6)),
+                'constant_voltage':      bool(demand & (1 << 7)),
+                'constant_power':        bool(demand & (1 << 8)),
+                'constant_resistance':   bool(demand & (1 << 9)),
+                }
+        return state
 
 class DCLoad(InstrumentInterface):
     _reg_clsid_      = "{943E2FA3-4ECE-448A-93AF-9ECAEB49CA1B}"
@@ -585,13 +636,14 @@ class DCLoad(InstrumentInterface):
         assert(self.CommandProperlyFormed(cmd))
         response = self.SendCommand(cmd)
         self.PrintCommandAndResponse(cmd, response, "Get input values")
-        voltage = self.DecodeInteger(response[3:7])/self.convert_voltage
-        current = self.DecodeInteger(response[7:11])/self.convert_current
-        power   = self.DecodeInteger(response[11:15])/self.convert_power
-        op_state = hex(self.DecodeInteger(response[15]))
-        demand_state = hex(self.DecodeInteger(response[16:18]))
-        s = [str(voltage) + " V", str(current) + " A", str(power) + " W", str(op_state), str(demand_state)]
-        return join(s, "\t")
+        input_values = {
+            'voltage': self.DecodeInteger(response[3:7])/self.convert_voltage,
+            'current': self.DecodeInteger(response[7:11])/self.convert_current,
+            'power': self.DecodeInteger(response[11:15])/self.convert_power,
+            'op_state':  self.ParseOperationState(self.DecodeInteger(response[15])),
+            'demand_state':  self.ParseDemandState(self.DecodeInteger(response[16:18])),
+            }
+        return input_values
     # Returns model number, serial number, and firmware version number
     def GetProductInformation(self):
         "Returns model number, serial number, and firmware version"
