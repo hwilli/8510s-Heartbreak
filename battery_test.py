@@ -15,7 +15,7 @@ def formatDataRow(data):
 
 def writeData(row, csv_file):
     print row
-    csv_w.writerow(row)
+    csv_file.writerow(row)
 
 def stopTest(signal, frame):
     global testIsRunning
@@ -52,8 +52,8 @@ def runBatteryTest(load):
             data = parseInputValues(load)
             writeData(formatDataRow(data), csv_w)
 
-            # stop if the read voltage drops below 3 volts
-            if data['voltage'] < 3:
+            # stop if the read voltage drops below 3 volts, or amps below 100 mA
+            if data['current'] < 0.1:
                 break
 
             #sleep for 10 seconds before sampling again
